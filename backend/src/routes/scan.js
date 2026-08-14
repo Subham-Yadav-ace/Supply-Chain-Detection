@@ -48,15 +48,18 @@ router.post('/', upload.single('packageJson'), async (req, res) => {
       }
     }
 
+    const isComplete = cachedPackages.length === uniquePackages.length;
+    
     // Create scan document
     const scan = await ScanResult.create({
       scanId,
       input,
-      status: 'queued',
+      status: isComplete ? 'complete' : 'queued',
       totalPackages: uniquePackages.length,
       completedPackages: cachedPackages.length,
       dependencyTree: tree,
       results: cachedPackages.map(p => p.result),
+      completedAt: isComplete ? new Date() : null
     });
 
     // Enqueue uncached packages

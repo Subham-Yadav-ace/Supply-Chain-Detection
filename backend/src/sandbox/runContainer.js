@@ -88,10 +88,16 @@ function buildInstallCmd(pkgSpec) {
  * @returns {Promise<SandboxFindings>}
  */
 export async function runSandbox(packageName, version) {
-  const pkgSpec  = version ? `${packageName}@${version}` : packageName;
-  const safeTag  = packageName.replace(/[^a-z0-9_-]/gi, '_');
-  const tmpDir   = await fs.mkdtemp(path.join(os.tmpdir(), `sentinel-${safeTag}-`));
-  const logsDir  = path.join(tmpDir, 'logs');
+  let pkgSpec = version && !packageName.endsWith('.tgz') ? `${packageName}@${version}` : packageName;
+  const safeTag = packageName.replace(/[^a-z0-9_-]/gi, '_');
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `sentinel-${safeTag}-`));
+  const logsDir = path.join(tmpDir, 'logs');
+  const bindMounts = [`${logsDir}:/sandbox/logs:rw`];
+
+  if (packageName.startsWith('/') && packageName.endsWith('.tgz')) {
+    pkgSpec = '/sandbox/local-package.tgz';
+    bindMounts.push(`${packageName}:/sandbox/local-package.tgz:ro`);
+  }
 
   await fs.mkdir(logsDir, { recursive: true });
   await fs.chmod(logsDir, 0o777); // non-root container user must write here

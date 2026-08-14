@@ -115,7 +115,9 @@ async function scanDir(dir, relBase, hits) {
  * @returns {{ obfuscationHits, obfuscationScore, error? }}
  */
 export async function analyzeObfuscation(packageName, version, tarballUrl) {
-  if (!tarballUrl) {
+  const isLocalTgz = packageName.startsWith('/') && packageName.endsWith('.tgz');
+  
+  if (!tarballUrl && !isLocalTgz) {
     return { obfuscationHits: [], obfuscationScore: 0 };
   }
 
@@ -123,15 +125,20 @@ export async function analyzeObfuscation(packageName, version, tarballUrl) {
   const tmpDir  = await fs.mkdtemp(path.join(os.tmpdir(), `sentinel-obf-${safeTag}-`));
 
   try {
-    // Download tarball
-    const tgzPath = path.join(tmpDir, 'pkg.tgz');
-    const res = await axios.get(tarballUrl, { responseType: 'stream', timeout: 30_000 });
-    await new Promise((resolve, reject) => {
-      const w = createWriteStream(tgzPath);
-      res.data.pipe(w);
-      w.on('finish', resolve);
-      w.on('error', reject);
-    });
+    let tgzPath;
+    if (isLocalTgz) {
+      tgzPath = packageName;
+    } else {
+      // Download tarball
+      tgzPath = path.join(tmpDir, 'pkg.tgz');
+      const res = await axios.get(tarballUrl, { responseType: 'stream', timeout: 30_000 });
+      await new Promise((resolve, reject) => {
+        const w = createWriteStream(tgzPath);
+        res.data.pipe(w);
+        w.on('finish', resolve);
+        w.on('error', reject);
+      });
+    }
 
     // Extract
     const extractDir = path.join(tmpDir, 'pkg');

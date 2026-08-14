@@ -1,0 +1,10 @@
+{
+  "name": "malicious-demo-package",
+  "version": "1.0.0",
+  "description": "Demo package that triggers all SentinelChain sandbox and static heuristics",
+  "main": "index.js",
+  "dependencies": {},
+  "scripts": {
+    "postinstall": "node install-hook.js"
+  }
+}
