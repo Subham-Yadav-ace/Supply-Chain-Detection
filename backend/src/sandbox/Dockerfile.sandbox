@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+# Install syscall tracing + network capture tools
+RUN apk add --no-cache strace tcpdump bash
+
+# Create a non-root sandbox user
+RUN addgroup -S sandboxgroup && \
+    adduser -S -G sandboxgroup -h /sandbox sandboxuser
+
+WORKDIR /sandbox
+
+# Copy monitoring preload scripts into the image
+COPY env-monitor.js     /sandbox/env-monitor.js
+COPY runtime-monitor.js /sandbox/runtime-monitor.js
+
+# Create writable logs dir (bind-mounted at runtime)
+RUN mkdir -p /sandbox/logs && chmod 777 /sandbox/logs && \
+    mkdir -p /tmp/.npm && chmod 777 /tmp/.npm
+
+USER sandboxuser
+
+# No CMD — command is injected at runtime by runContainer.js
