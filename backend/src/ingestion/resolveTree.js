@@ -58,14 +58,22 @@ function parseLockfile(lockfile) {
   const seen = new Map();
 
   for (const [pkgPath, pkgData] of Object.entries(packages)) {
-    if (pkgPath === '') continue; // root package
+    let name, version, depth, parent;
 
-    // Split path on "node_modules/" — gives us the nesting depth
-    const segments = pkgPath.split('node_modules/').filter(Boolean);
-    const name    = segments[segments.length - 1];
-    const depth   = segments.length - 1;
-    const parent  = segments.length > 1 ? segments[segments.length - 2].replace(/\/$/, '') : null;
-    const version = pkgData.version || 'unknown';
+    if (pkgPath === '') {
+      // Root package
+      name = lockfile.name || 'root-package';
+      version = lockfile.version || '1.0.0';
+      depth = 0;
+      parent = null;
+    } else {
+      // Split path on "node_modules/" — gives us the nesting depth
+      const segments = pkgPath.split('node_modules/').filter(Boolean);
+      name    = segments[segments.length - 1];
+      depth   = segments.length; // 1 for direct, 2+ for transitive
+      parent  = segments.length > 1 ? segments[segments.length - 2].replace(/\/$/, '') : 'root-package';
+      version = pkgData.version || 'unknown';
+    }
 
     tree.push({ name, version, depth, parent });
 
@@ -76,12 +84,17 @@ function parseLockfile(lockfile) {
   return { tree, uniquePackages: Array.from(seen.values()) };
 }
 
-// ── Fallback: parse direct dependencies only ──────────────────────────────────
-
 function fallbackParse(pkgJson, singlePackageName) {
   if (singlePackageName) {
     const entry = { name: singlePackageName, version: 'latest', depth: 0, parent: null };
     return { tree: [entry], uniquePackages: [{ name: singlePackageName, version: 'latest' }] };
+  }
+
+  const tree = [];
+  
+  // Include the root package itself if it has a name
+  if (pkgJson.name) {
+    tree.push({ name: pkgJson.name, version: pkgJson.version || '1.0.0', depth: 0, parent: null });
   }
 
   const deps = {
@@ -89,12 +102,14 @@ function fallbackParse(pkgJson, singlePackageName) {
     ...(pkgJson.devDependencies || {}),
   };
 
-  const tree = Object.entries(deps).map(([name, rawVersion]) => ({
+  const depEntries = Object.entries(deps).map(([name, rawVersion]) => ({
     name,
     version: rawVersion.replace(/^[\^~>=<]/, ''),
-    depth: 0,
-    parent: null,
+    depth: 1,
+    parent: pkgJson.name || 'root',
   }));
+  
+  tree.push(...depEntries);
 
   const uniquePackages = tree.map(({ name, version }) => ({ name, version }));
   return { tree, uniquePackages };
