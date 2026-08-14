@@ -1,0 +1,31 @@
+{
+  "name": "sentinelchain-backend",
+  "version": "1.0.0",
+  "description": "SentinelChain backend — AI-powered supply chain attack detector",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "acorn": "^8.12.1",
+    "acorn-walk": "^8.3.4",
+    "axios": "^1.7.2",
+    "bullmq": "^5.10.0",
+    "cors": "^2.8.5",
+    "dockerode": "^4.0.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "fastest-levenshtein": "^1.0.16",
+    "ioredis": "^5.4.1",
+    "mongoose": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
+    "tar": "^7.4.3",
+    "uuid": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
