@@ -1,0 +1,141 @@
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px;
+}
+
+.upload-header {
+  text-align: center;
+}
+
+.upload-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.upload-header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.drop-zone {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.drop-zone:hover:not(.disabled) {
+  border-color: var(--accent);
+  background: rgba(102, 252, 241, 0.05);
+}
+
+.drop-zone.dragging {
+  border-color: var(--accent);
+  background: rgba(102, 252, 241, 0.1);
+  transform: scale(1.02);
+}
+
+.drop-zone.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.drop-icon {
+  font-size: 48px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  transition: color 0.3s ease;
+}
+
+.drop-zone:hover:not(.disabled) .drop-icon,
+.drop-zone.dragging .drop-icon {
+  color: var(--accent);
+}
+
+.drop-zone h3 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.drop-zone p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.divider span {
+  padding: 0 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.text-input-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group {
+  display: flex;
+  position: relative;
+  gap: 12px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.input-group input {
+  padding-left: 48px;
+}
+
+.input-group button {
+  white-space: nowrap;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.error-message {
+  padding: 12px;
+  background: rgba(211, 47, 47, 0.1);
+  border: 1px solid var(--risk-critical);
+  border-radius: 8px;
+  color: #ff8a80;
+  text-align: center;
+  font-size: 0.9rem;
+}
