@@ -2,43 +2,63 @@ import { GoogleGenAI } from '@google/genai';
 import { buildPrompt, AI_RESPONSE_SCHEMA } from './promptBuilder.js';
 import { parseAIScore } from './scoreParser.js';
 
-let ai;
-try {
-  if (process.env.GEMINI_API_KEY) {
-    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let ai = null;
+
+function getAiClient() {
+  if (!ai && process.env.GEMINI_API_KEY) {
+    try {
+      ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    } catch (e) {
+      console.warn('[Gemini] Failed to initialize client:', e.message);
+    }
   }
-} catch (e) {
-  console.warn('[Gemini] Failed to initialize client:', e.message);
+  return ai;
 }
 
 /**
  * Score a package using Gemini. Falls back to heuristic scoring if API key is missing.
  */
 export async function scorePackage(sandboxFindings, staticFindings, registryMetadata) {
-  if (!ai || !process.env.GEMINI_API_KEY) {
+  const client = getAiClient();
+  if (!client || !process.env.GEMINI_API_KEY) {
     console.warn('[Gemini] API key missing. Falling back to heuristic scoring.');
     return heuristicFallback(sandboxFindings, staticFindings);
   }
 
   const { systemInstruction, prompt } = buildPrompt(sandboxFindings, staticFindings, registryMetadata);
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: AI_RESPONSE_SCHEMA,
+  let attempt = 0;
+  const maxAttempts = 10;
+
+  while (attempt < maxAttempts) {
+    try {
+      const response = await client.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: prompt,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: AI_RESPONSE_SCHEMA,
+        }
+      });
+
+      const text = response.text;
+      return parseAIScore(text);
+
+    } catch (err) {
+      if (err.status === 429 || err.message.includes('429') || err.message.includes('Quota exceeded')) {
+        attempt++;
+        if (attempt >= maxAttempts) {
+          console.error('[Gemini] Max retries reached for 429. Falling back.');
+          return heuristicFallback(sandboxFindings, staticFindings);
+        }
+        console.warn(`[Gemini] Rate limit hit. Waiting 12 seconds before retry ${attempt}/${maxAttempts}...`);
+        await new Promise(resolve => setTimeout(resolve, 12000));
+      } else {
+        console.error('[Gemini] Scoring failed:', err.message);
+        return heuristicFallback(sandboxFindings, staticFindings);
       }
-    });
-
-    const text = response.text();
-    return parseAIScore(text);
-
-  } catch (err) {
-    console.error('[Gemini] Scoring failed:', err.message);
-    return heuristicFallback(sandboxFindings, staticFindings);
+    }
   }
 }
 

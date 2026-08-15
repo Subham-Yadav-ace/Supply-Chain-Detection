@@ -61,17 +61,13 @@ function parseLockfile(lockfile) {
     let name, version, depth, parent;
 
     if (pkgPath === '') {
-      // Root package
-      name = lockfile.name || 'root-package';
-      version = lockfile.version || '1.0.0';
-      depth = 0;
-      parent = null;
+      continue; // Skip the root package (the temporary wrapper or the user's project)
     } else {
       // Split path on "node_modules/" — gives us the nesting depth
       const segments = pkgPath.split('node_modules/').filter(Boolean);
       name    = segments[segments.length - 1];
       depth   = segments.length; // 1 for direct, 2+ for transitive
-      parent  = segments.length > 1 ? segments[segments.length - 2].replace(/\/$/, '') : 'root-package';
+      parent  = segments.length > 1 ? segments[segments.length - 2].replace(/\/$/, '') : null;
       version = pkgData.version || 'unknown';
     }
 
@@ -92,10 +88,7 @@ function fallbackParse(pkgJson, singlePackageName) {
 
   const tree = [];
   
-  // Include the root package itself if it has a name
-  if (pkgJson.name) {
-    tree.push({ name: pkgJson.name, version: pkgJson.version || '1.0.0', depth: 0, parent: null });
-  }
+  // Exclude the root package itself since it is just the wrapper/project
 
   const deps = {
     ...(pkgJson.dependencies || {}),
@@ -106,7 +99,7 @@ function fallbackParse(pkgJson, singlePackageName) {
     name,
     version: rawVersion.replace(/^[\^~>=<]/, ''),
     depth: 1,
-    parent: pkgJson.name || 'root',
+    parent: null,
   }));
   
   tree.push(...depEntries);

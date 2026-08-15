@@ -130,7 +130,7 @@ export function startWorker() {
     }
   }, { 
     connection,
-    concurrency: parseInt(process.env.WORKER_CONCURRENCY) || 3
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY) || 1
   });
 
   worker.on('error', err => {
