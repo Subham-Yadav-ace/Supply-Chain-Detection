@@ -18,23 +18,23 @@ The system is built on a microservices-inspired architecture designed for parall
 
 ```mermaid
 graph TD
-    Client[Frontend (React + Vite)] -->|HTTP POST package| API[Express.js Backend]
-    API -->|Resolves Dependencies & Enqueues| Queue[BullMQ (Redis)]
+    Client["Frontend (React + Vite)"] -->|HTTP POST package| API["Express.js Backend"]
+    API -->|Resolves Dependencies & Enqueues| Queue["BullMQ (Redis)"]
     API -->|SSE Progress Stream| Client
     
-    Queue -->|Pulls Uncached Packages| Worker[BullMQ Worker (Node.js)]
+    Queue -->|Pulls Uncached Packages| Worker["BullMQ Worker (Node.js)"]
     
-    Worker -->|1. Dynamic Sandbox| Docker[Docker Container]
-    Worker -->|2. Static Analysis| Static[Obfuscation & Typosquat]
-    Worker -->|3. Registry Checks| Meta[Metadata Flags]
+    Worker -->|1. Dynamic Sandbox| Docker["Docker Container"]
+    Worker -->|2. Static Analysis| Static["Obfuscation & Typosquat"]
+    Worker -->|3. Registry Checks| Meta["Metadata Flags"]
     
-    Docker -->|Findings| AI[Gemini AI Scoring]
+    Docker -->|Findings| AI["Gemini AI Scoring"]
     Static -->|Findings| AI
     Meta -->|Findings| AI
     
     AI -->|Risk JSON| Worker
-    Worker -->|Saves Results| DB[(MongoDB)]
-    Worker -->|Caches| Cache[(Redis)]
+    Worker -->|Saves Results| DB[("MongoDB")]
+    Worker -->|Caches| Cache[("Redis")]
 ```
 
 ### Core Components
